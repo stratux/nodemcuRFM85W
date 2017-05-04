@@ -6,9 +6,6 @@ function stringends(String, End)
     return End=='' or string.sub(String,-string.len(End))==End
 end
 
-l=""
-n=0
-
 -- Sets up the standard UART for normal communications.
 function reenable_standard_uart()
     uart.on("data") -- unregister callback function
@@ -29,13 +26,11 @@ end
 -- Receives data from the GPS UART.
 function receive_uart(data)
     if stringstarts(data, "$GP") then
-        parse_gps_string(data)
-        l = l .. data
-        n = n + 1
-    end
-    if n >= 150 then
-        --Reenable the standard UART and switch back.
-        reenable_standard_uart()
+        if parse_gps_string(data) then
+            --GPS position has been obtained.
+            --Reenable the standard UART and switch back.
+            reenable_standard_uart()
+        end
     end
 end
 
@@ -45,7 +40,7 @@ function mySplit(inputstr, sep)
         sep = "%s"
     end
     local t={} ; i=1
-    for str in string.gmatch(inputstr, "([^"..sep.."]*)") do
+    for str in string.gmatch(inputstr, "([^"..sep.."]*)("..sep.."?)") do
         t[i] = str
         i = i + 1
     end
@@ -71,7 +66,7 @@ local function bxor(a,b)--Bitwise xor
 end
 
 function gps_crc(data)
-    n = 0
+    local n = 0
     for i = 1, #data do
         local b = data:byte(i)
         if b == 42 then
@@ -98,13 +93,13 @@ function parse_gps_string(data)
     end
 
     print(data)
-    local x = mySplit(data, ",")
+    x = mySplit(data, ",")
     if #x < 2 then
         --Invalid format.
         return false
     end
 
-    local crc_x = mySplit(data, "*")
+    crc_x = mySplit(data, "*")
 
     if #crc_x < 2 then
         --No CRC or invalid format.
@@ -113,9 +108,9 @@ function parse_gps_string(data)
 
 
     --CRC value is a hex value, convert to dec and compare.
-    local crc = tonumber(crc_x[#crc_x-1], 16)
+    crc = tonumber(crc_x[#crc_x-1], 16)
 
-    local calculated_crc = gps_crc(data)
+    calculated_crc = gps_crc(data)
 
     if crc ~= calculated_crc then
         --CRC doesn't match.
@@ -127,8 +122,9 @@ function parse_gps_string(data)
     if x[1] == "$GPRMC" then
         last_gprmc = data
         last_lat = tonumber(x[4], 10)
-        last_lng = tonumber(x[6], 10) 
+        last_lng = tonumber(x[6], 10)
+        return true
     end
 
-    return true
+    return false
 end
