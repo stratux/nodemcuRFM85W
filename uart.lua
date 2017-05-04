@@ -73,7 +73,7 @@ end
 function gps_crc(data)
     n = 0
     for i = 1, #data do
-        b = data:byte(i)
+        local b = data:byte(i)
         if b == 42 then
             -- Reached "*", end the CRC calc.
             return n
@@ -98,13 +98,13 @@ function parse_gps_string(data)
     end
 
     print(data)
-    x = mySplit(data, ",")
+    local x = mySplit(data, ",")
     if #x < 2 then
         --Invalid format.
         return false
     end
 
-    crc_x = mySplit(data, "*")
+    local crc_x = mySplit(data, "*")
 
     if #crc_x < 2 then
         --No CRC or invalid format.
@@ -113,9 +113,9 @@ function parse_gps_string(data)
 
 
     --CRC value is a hex value, convert to dec and compare.
-    crc = tonumber(crc_x[#crc_x-1], 16)
+    local crc = tonumber(crc_x[#crc_x-1], 16)
 
-    calculated_crc = gps_crc(data)
+    local calculated_crc = gps_crc(data)
 
     if crc ~= calculated_crc then
         --CRC doesn't match.
