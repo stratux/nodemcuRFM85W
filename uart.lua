@@ -121,8 +121,30 @@ function parse_gps_string(data)
     print(x[1])
     if x[1] == "$GPRMC" then
         last_gprmc = data
-        last_lat = tonumber(x[4], 10)
-        last_lng = tonumber(x[6], 10)
+
+		-- Parse the lat.
+		local lat_raw = x[4]
+		if lat_raw:len() < 10 then --String is too short.
+			return false
+		end
+		local lat_hrs = tonumber(lat_raw:sub(1, 2), 10)
+		local lat_min_f = tonumber(lat_raw:sub(3), 10)
+		last_lat = lat_hrs + (lat_min_f/60.0)
+		if x[5] == "S" then
+			last_lat = -last_lat
+		end
+		
+		--Parse the lng.
+		local lng_raw = x[6]
+		if lng_raw:len() < 11 then -- String is too short.
+			return false
+		end
+		local lng_hrs = tonumber(lng_raw:sub(1, 3), 10)
+		local lng_min_f = tonumber(lng_raw:sub(4), 10)
+		last_lng = lng_hrs + (lng_min_f/60.0)
+		if x[7] == "W" then
+			last_lng = -last_lng
+		end
         return true
     end
 
