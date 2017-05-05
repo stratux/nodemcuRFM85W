@@ -55,7 +55,12 @@ end
 function send_message(msg)
 	if msg:len() > 255 then
 		--Message is too long
+		print("can't send message - too long.")
 		return false
+	end
+	if waiting_interrupt == 1 then
+		print("can't send message - transmit currently in progress.")
+		return
 	end
 	--Set STDBY mode.
 	spi_set_register(0x01, 0x01)
