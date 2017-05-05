@@ -21,7 +21,9 @@ function spi_set_register(reg, val)
 end
 
 function spi_bulk_write(reg, vals)
-	table.insert(vals, 1, reg)
+	gpio.write(8, gpio.LOW)
+	local vals = string.char(BitOR(reg, 0x80)) .. vals
 	local x = {spi.send(1, vals)}
+	gpio.write(8, gpio.HIGH)
 	return x[3]
 end

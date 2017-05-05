@@ -5,7 +5,10 @@ function handle_dio0_interrupt(level, when)
 		print("received DIO0 interrupt but was not expecting it.")
 		return
 	end
+	--Don't bother getting IRQ flags, assume that all interrupts are TxDone.
 	print("TxDone.")
+	--Clear IRQ flags.
+	spi_set_register(0x12, 0xFF)
 	waiting_interrupt = 0
 end
 
@@ -24,22 +27,14 @@ function init_rfm95w()
 	--Set base addresses of the FIFO buffer in both TX and RX cases to zero.
 	spi_set_register(0x0E, 0x00)
 	spi_set_register(0x0F, 0x00)
-
-	--Set up DIO0 interrupt pin and set DIO0 to interrupt on TxDone.
-	spi_set_register(0x40, 0x40)
-	--Set pin connected to DIO0 to INT (interrupt) mode.
-	gpio.mode(PINNUM, gpio.INT, gpio.FLOAT)
-	gpio.trig(PINNUM, "up", handle_dio0_interrupt)
 	
 	--Set STDBY mode.
 	spi_set_register(0x01, 0x01)
 
 	--Configuration registers.
-	--TODO
-	--125 kHz, CR 4/5, SF=7.
-	spi_set_register(0x1D, 0x72)
-	spi_set_register(0x1E, 0x74)
-	spi_set_register(0x26, 0x00)
+	spi_set_register(0x1D, 0x42) -- BW=31.25 kHz, CR=4/5, ImplicitHeaderModeOn=0.
+	spi_set_register(0x1E, 0xB0) -- SF=11.
+	spi_set_register(0x26, 0x04)
 
 	--Set frequency to 915 MHz.
 	spi_set_register(0x06, 0xE4)
@@ -62,6 +57,11 @@ function send_message(msg)
 		print("can't send message - transmit currently in progress.")
 		return
 	end
+	--Set pin connected to DIO0 to INT (interrupt) mode.
+	gpio.mode(12, gpio.INT, gpio.PULLDOWN)
+	gpio.trig(12, "up", handle_dio0_interrupt)
+	--Set up DIO0 interrupt pin and set DIO0 to interrupt on TxDone.
+	spi_set_register(0x40, 0x40)
 	--Set STDBY mode.
 	spi_set_register(0x01, 0x01)
 	--Set the FIFO address pointer to the start.
