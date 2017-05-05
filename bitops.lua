@@ -1,5 +1,5 @@
 --From http://stackoverflow.com/a/25594410.
-local function BitXOR(a,b)--Bitwise xor
+function BitXOR(a,b)--Bitwise xor
     local p,c=1,0
     while a>0 and b>0 do
         local ra,rb=a%2,b%2
@@ -15,7 +15,7 @@ local function BitXOR(a,b)--Bitwise xor
     return c
 end
 
-local function BitOR(a,b)--Bitwise or
+function BitOR(a,b)--Bitwise or
     local p,c=1,0
     while a+b>0 do
         local ra,rb=a%2,b%2
@@ -25,7 +25,7 @@ local function BitOR(a,b)--Bitwise or
     return c
 end
 
-local function BitNOT(n)
+function BitNOT(n)
     local p,c=1,0
     while n>0 do
         local r=n%2
@@ -35,7 +35,7 @@ local function BitNOT(n)
     return c
 end
 
-local function BitAND(a,b)--Bitwise and
+function BitAND(a,b)--Bitwise and
     local p,c=1,0
     while a>0 and b>0 do
         local ra,rb=a%2,b%2
