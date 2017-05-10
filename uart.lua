@@ -85,6 +85,10 @@ end
 last_gprmc = ""
 last_lat = 0.00
 last_lng = 0.00
+last_speed = 0.00
+last_course = 0.00
+last_fixtype = 0
+last_altitude = 0.00
 
 function parse_gps_string(data)
     if data:sub(1, 1) ~= "$" then
@@ -143,8 +147,24 @@ function parse_gps_string(data)
 		if x[7] == "W" then
 			last_lng = -last_lng
 		end
+		--Parse ground speed.
+		last_speed = tonumber(x[8], 10)
+		--Parse course.
+		if x[9]:len() > 0 then
+			last_course = tonumber(x[9], 10)
+		else
+			last_course = 0.00
+		end
         return true
     end
+
+	if x[1] == "$GPGGA" then
+		last_fixtype = tonumber(x[7], 10)
+		if last_fixtype == 1 or last_fixtype == 2 then
+			--Parse altitude.
+			last_altitude = tonumber(x[10], 10)
+		end
+	end
 
     return false
 end
