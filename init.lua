@@ -6,5 +6,7 @@ dofile("uart.lua")
 spi_setup()
 init_rfm95w()
 
---setup_gps_uart()
+--Comment this out for dev.
+--TODO: Detect if the peripheral board is connected.
+setup_gps_uart()
 

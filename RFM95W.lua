@@ -1,16 +1,14 @@
---DIO0 (interrupt) on GPIO3 (9).
---FIXME. This configuration makes the serial port (messages sent TO the ESP8266) unusable while the radio is connected (to RXD0).
---Debug information printed to the console can still be received over the serial connection.
+--DIO0 (interrupt) on GPIO5 (1).
 
 waiting_interrupt = 0
 
 function handle_dio0_interrupt(level, when)
 	if waiting_interrupt == 0 then
-		print("received DIO0 interrupt but was not expecting it.")
+		--print("received DIO0 interrupt but was not expecting it.")
 		return
 	end
 	--Don't bother getting IRQ flags, assume that all interrupts are TxDone.
-	print("TxDone.")
+	--print("TxDone.")
 	--Clear IRQ flags.
 	spi_set_register(0x12, 0xFF)
 	waiting_interrupt = 0
@@ -25,7 +23,7 @@ function init_rfm95w()
 	--Get mode, check mode.
 	local cur_mode = spi_get_register(0x01)
 	if cur_mode ~= 0x80 then
-		print("LoRa module init failure.")
+		--print("LoRa module init failure.")
 	end
 
 	--Set base addresses of the FIFO buffer in both TX and RX cases to zero.
@@ -36,7 +34,7 @@ function init_rfm95w()
 	spi_set_register(0x01, 0x01)
 
 	--Configuration registers.
-	spi_set_register(0x1D, 0x72) -- BW=125 kHz, CR=4/5, ImplicitHeaderModeOn=0.
+	spi_set_register(0x1D, 0x78) -- BW=125 kHz, CR=4/8, ImplicitHeaderModeOn=0.
 	spi_set_register(0x1E, 0xB0) -- SF=11.
 	spi_set_register(0x26, 0x04)
 
@@ -58,16 +56,16 @@ end
 function send_message(msg)
 	if msg:len() > 255 then
 		--Message is too long
-		print("can't send message - too long.")
+		--print("can't send message - too long.")
 		return false
 	end
 	if waiting_interrupt == 1 then
-		print("can't send message - transmit currently in progress.")
+		--print("can't send message - transmit currently in progress.")
 		return
 	end
 	--Set pin connected to DIO0 to INT (interrupt) mode.
-	gpio.mode(9, gpio.INT, gpio.PULLDOWN)
-	gpio.trig(9, "up", handle_dio0_interrupt)
+	gpio.mode(1, gpio.INT, gpio.PULLDOWN)
+	gpio.trig(1, "up", handle_dio0_interrupt)
 	--Set up DIO0 interrupt pin and set DIO0 to interrupt on TxDone.
 	spi_set_register(0x40, 0x40)
 	--Set STDBY mode.
