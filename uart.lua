@@ -1,3 +1,5 @@
+--FIXME. This configuration makes the serial port unusable while the GPS is connected.
+
 function stringstarts(String, Start)
     return string.sub(String,1,string.len(Start))==Start
 end
@@ -13,11 +15,9 @@ function reenable_standard_uart()
     uart.setup(0, 115200, 8, uart.PARITY_NONE, uart.STOPBITS_1, 1)
 end
 
--- Sets up the secondary UART to receive the GPS data.
+-- Sets up the primary UART to receive the GPS data.
 function setup_gps_uart()
-    --Use alternate UART (GPIO13=RXD/GPIO15=TXD) while waiting for GPS data.
-    -- This disables the standard UART.
-    uart.alt(1)
+    uart.alt(0)
     uart.setup(0, 9600, 8, uart.PARITY_NONE, uart.STOPBITS_1, 1)
 
     uart.on("data", "\n", receive_uart, 0)
@@ -28,8 +28,9 @@ function receive_uart(data)
     if stringstarts(data, "$GP") then
         if parse_gps_string(data) then
             --GPS position has been obtained.
-            --Reenable the standard UART and switch back.
-            reenable_standard_uart()
+            --TODO: Send position.
+            s = "pos:"..last_lat..","..last_lng
+            send_message(s)
         end
     end
 end
@@ -86,13 +87,11 @@ last_lat = 0.00
 last_lng = 0.00
 
 function parse_gps_string(data)
-    print(data:sub(1, 1))
     if data:sub(1, 1) ~= "$" then
         --Invalid format
         return false
     end
 
-    print(data)
     x = mySplit(data, ",")
     if #x < 2 then
         --Invalid format.
@@ -118,7 +117,6 @@ function parse_gps_string(data)
     end
 
     --Parse the GPRMC line.
-    print(x[1])
     if x[1] == "$GPRMC" then
         last_gprmc = data
 
