@@ -21,6 +21,11 @@ function setup_gps_uart()
     uart.setup(0, 9600, 8, uart.PARITY_NONE, uart.STOPBITS_1, 1)
 
     uart.on("data", "\n", receive_uart, 0)
+
+	tmr.alarm(1, 2000, tmr.ALARM_AUTO, function()
+        s = "pos:"..last_fixtype..":"..last_lat..","..last_lng..",alt:"..last_altitude..",speed:"..last_speed..",course:"..last_course
+        send_message(s)
+	end)
 end
 
 -- Receives data from the GPS UART.
@@ -28,9 +33,7 @@ function receive_uart(data)
     if stringstarts(data, "$GP") then
         if parse_gps_string(data) then
             --GPS position has been obtained.
-            --TODO: Send position.
-            s = "pos:"..last_lat..","..last_lng
-            send_message(s)
+            --FIXME: Do something.
         end
     end
 end
@@ -48,24 +51,6 @@ function mySplit(inputstr, sep)
     return t
 end
 
-
---http://stackoverflow.com/a/25594410
-local function bxor(a,b)--Bitwise xor
-    local p,c=1,0
-    while a>0 and b>0 do
-        local ra,rb=a%2,b%2
-        if ra~=rb then c=c+p end
-        a,b,p=(a-ra)/2,(b-rb)/2,p*2
-    end
-    if a<b then a=b end
-    while a>0 do
-        local ra=a%2
-        if ra>0 then c=c+p end
-        a,p=(a-ra)/2,p*2
-    end
-    return c
-end
-
 function gps_crc(data)
     local n = 0
     for i = 1, #data do
@@ -76,7 +61,7 @@ function gps_crc(data)
         end
         if b ~= 36 then
             -- Skip "$" characters, if any.
-            n = bxor(n, b)
+            n = BitXOR(n, b)
         end
     end
     return n

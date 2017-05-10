@@ -8,5 +8,7 @@ init_rfm95w()
 
 --Comment this out for dev.
 --TODO: Detect if the peripheral board is connected.
-setup_gps_uart()
 
+tmr.alarm(2, 10000, tmr.ALARM_SINGLE, function()
+	setup_gps_uart()
+end)
