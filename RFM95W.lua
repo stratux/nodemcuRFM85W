@@ -1,3 +1,6 @@
+--DIO0 (interrupt) on GPIO3 (9).
+--FIXME. This configuration makes the serial port unusable while the radio is connected (to RXD0).
+
 waiting_interrupt = 0
 
 function handle_dio0_interrupt(level, when)
@@ -62,8 +65,8 @@ function send_message(msg)
 		return
 	end
 	--Set pin connected to DIO0 to INT (interrupt) mode.
-	gpio.mode(12, gpio.INT, gpio.PULLDOWN)
-	gpio.trig(12, "up", handle_dio0_interrupt)
+	gpio.mode(9, gpio.INT, gpio.PULLDOWN)
+	gpio.trig(9, "up", handle_dio0_interrupt)
 	--Set up DIO0 interrupt pin and set DIO0 to interrupt on TxDone.
 	spi_set_register(0x40, 0x40)
 	--Set STDBY mode.
