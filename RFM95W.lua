@@ -1,5 +1,6 @@
 --DIO0 (interrupt) on GPIO3 (9).
---FIXME. This configuration makes the serial port unusable while the radio is connected (to RXD0).
+--FIXME. This configuration makes the serial port (messages sent TO the ESP8266) unusable while the radio is connected (to RXD0).
+--Debug information printed to the console can still be received over the serial connection.
 
 waiting_interrupt = 0
 
