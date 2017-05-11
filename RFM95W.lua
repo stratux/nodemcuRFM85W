@@ -35,8 +35,8 @@ function init_rfm95w()
 
 	--Configuration registers.
 	spi_set_register(0x1D, 0x78) -- BW=125 kHz, CR=4/8, ImplicitHeaderModeOn=0.
-	spi_set_register(0x1E, 0xB0) -- SF=11.
-	spi_set_register(0x26, 0x04)
+	spi_set_register(0x1E, 0x74) -- SF=7.
+	spi_set_register(0x26, 0x00)
 
 	--Set preamble length to 8.
 	spi_set_register(0x20, 0x00)
