@@ -1,17 +1,39 @@
 --DIO0 (interrupt) on GPIO5 (1).
 
-waiting_interrupt = 0
+waiting_interrupt = 0 --Must receive the interrupt to continue.
+
+current_mode = 0 --0x05=RF95W_MODE_RXCONTINUOUS, 0x03=RF95W_MODE_TX
 
 function handle_dio0_interrupt(level, when)
-	if waiting_interrupt == 0 then
-		--print("received DIO0 interrupt but was not expecting it.")
-		return
+	local irqFlags = spi_get_register(0x12)
+	if current_mode == 0x03 then --Waiting for TX to finish
+		if waiting_interrupt == 0 then
+			--print("received DIO0 interrupt but was not expecting it.")
+			return
+		end
+		--Don't bother getting IRQ flags, assume that all interrupts are TxDone.
+		print("TxDone.")
+		--Set up DIO0 interrupt pin and set DIO0 to interrupt on RxDone.
+		spi_set_register(0x40, 0x00)
+		--Set RXCONTINUOUS mode.
+		spi_set_register(0x01, 0x05)
+		current_mode = 0x05
+		waiting_interrupt = 0
+	elseif current_mode == 0x05 then --RX.
+		if BitAND(irqFlags, 0x80) then --RXTIMEOUT.
+			print("RXTIMEOUT.")
+		elseif BitAND(irqFlags, 0x20) then --PAYLOADCRCERROR.
+			print("Payload CRC error.")
+		elseif BitAND(irqFlags, 0x40) then --RXDONE.
+			local msgLen = spi_get_register(0x13)
+			local fifoPtr = spi_get_register(0x10)
+			spi_set_register(0x0D, fifoPtr) --Set read start address at the RX FIFO pointer address.
+			local recvMsg = spi_bulk_get(0x00, msgLen)
+			print("received message with length "..msgLen)
+		end
 	end
-	--Don't bother getting IRQ flags, assume that all interrupts are TxDone.
-	--print("TxDone.")
 	--Clear IRQ flags.
 	spi_set_register(0x12, 0xFF)
-	waiting_interrupt = 0
 end
 
 function init_rfm95w()
@@ -51,6 +73,11 @@ function init_rfm95w()
 	spi_set_register(0x09, 0x8F)
 	--5.4.3. High Power +20 dBm Operation
 	spi_set_register(0x4D, 0x87)
+	--Set up DIO0 interrupt pin and set DIO0 to interrupt on RxDone.
+	spi_set_register(0x40, 0x00)
+	--Set RXCONTINUOUS mode.
+	spi_set_registeR(0x01, 0x05)
+	current_mode = 0x05
 end
 
 function send_message(msg)
@@ -66,8 +93,6 @@ function send_message(msg)
 	--Set pin connected to DIO0 to INT (interrupt) mode.
 	gpio.mode(1, gpio.INT, gpio.PULLDOWN)
 	gpio.trig(1, "up", handle_dio0_interrupt)
-	--Set up DIO0 interrupt pin and set DIO0 to interrupt on TxDone.
-	spi_set_register(0x40, 0x40)
 	--Set STDBY mode.
 	spi_set_register(0x01, 0x01)
 	--Set the FIFO address pointer to the start.
@@ -76,8 +101,11 @@ function send_message(msg)
 	spi_bulk_write(0x00, msg)
 	--Set the message payload length register.
 	spi_set_register(0x22, msg:len())
+	--Set up DIO0 interrupt pin and set DIO0 to interrupt on TxDone.
+	spi_set_register(0x40, 0x40)
 	--Flag waiting for interrupt.
 	waiting_interrupt = 1
 	--Begin transmitting.
 	spi_set_register(0x01, 0x03)
+	current_mode = 0x03
 end
