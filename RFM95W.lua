@@ -30,6 +30,13 @@ function handle_dio0_interrupt(level, when)
 			spi_set_register(0x0D, fifoPtr) --Set read start address at the RX FIFO pointer address.
 			local recvMsg = spi_bulk_get(0x00, msgLen)
 			print("received message with length "..msgLen)
+			if recvMsg:byte(1) == 0xF0 then
+				print("Received command message, parsing.")
+				parse_commands(recvMsg:sub(2))
+			else
+				print("Message received:")
+				print(recvMsg)
+			end
 		end
 	end
 	--Clear IRQ flags.
