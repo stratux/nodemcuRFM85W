@@ -3,7 +3,7 @@
 --0x99 [reg] [val]
 --Set a single value in register
 --0xF1
---Commit-confirm. Reset in 1 minute if "confirm" is not received.
+--Commit-confirm. Reset in 30s if "confirm" is not received.
 --0xF2
 --Confirm changes.
 
@@ -14,7 +14,6 @@ function parse_commands(cmds)
 	local i = 1
 	while i <= cmds:len() do
 		local b = cmds:byte(i)
-		print(i .. ":" .. b)
 		if b == 0xF2 then
 			--Confirm changes. Commits then sets up a confirm timer.
 			commit_changes()

@@ -2,6 +2,7 @@ dofile("bitops.lua")
 dofile("spi.lua")
 dofile("RFM95W.lua")
 dofile("uart.lua")
+dofile("remoteCommands.lua")
 
 spi_setup()
 init_rfm95w()

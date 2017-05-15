@@ -38,7 +38,7 @@ function spi_bulk_read(reg, readLen)
 	local vals = string.char(reg)
 	--Make a table with the length of readLen.
 	for i = 0, readLen, 1 do
-		vals = vals .. string.chr(0)
+		vals = vals .. string.char(0)
 	end
 	local bit_len = 8 * vals:len()
 	spi.set_mosi(1, vals)
@@ -46,6 +46,6 @@ function spi_bulk_read(reg, readLen)
 	spi.transaction(1, 0, 0, 0, 0, bit_len, 0, -1)
 	gpio.write(4, gpio.HIGH)
 	local ret = spi.get_miso(1, readLen+1)
-	ret = ret:sub(2, readLen)
+	ret = ret:sub(2)
 	return ret
 end
